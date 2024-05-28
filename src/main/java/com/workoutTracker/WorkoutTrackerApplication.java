@@ -1,5 +1,6 @@
 package com.workoutTracker;
 
+import com.workoutTracker.config.RsaKeyProperties;
 import com.workoutTracker.workout.BodyPart;
 import com.workoutTracker.workout.Workout;
 import org.slf4j.Logger;
@@ -7,10 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 
 @SpringBootApplication
+@EnableConfigurationProperties(RsaKeyProperties.class)
 public class WorkoutTrackerApplication {
 	private static final Logger log = LoggerFactory.getLogger(WorkoutTrackerApplication.class);
 

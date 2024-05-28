@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithMockUser
 class WorkoutTrackerApplicationTests {
 	public static final String API_WORKOUTS = "/api/workouts";
+	public static final String TEST_USER_NAME = "nat";
+	public static final String TEST_PASSWORD = "password";
 	@Autowired
 	TestRestTemplate testRestTemplate;
 
@@ -32,16 +34,19 @@ class WorkoutTrackerApplicationTests {
 
 	@Test
 	void shouldReturnAWorkout() {
-		ResponseEntity<Workout> readResponse = testRestTemplate.getForEntity("/api/workouts/2", Workout.class);
+		ResponseEntity<String> readResponse = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
+				.getForEntity("/api/workouts/2", String.class);
 		assertThat(readResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 		Workout expected = new Workout(2L, "squats", 66, BodyPart.LEGS, 8, "sarah1");
 
-//		makeAssertionsForWorkoutFields(expected, readResponse);
+		makeAssertionsForWorkoutFields(expected, readResponse);
 	}
 
 	@Test
 	void shouldNotReturnAWorkoutForInvalidID() {
 		ResponseEntity<String> response = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.getForEntity("/api/workouts/9999", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(response.getBody()).isBlank();
@@ -52,13 +57,14 @@ class WorkoutTrackerApplicationTests {
 	void shouldCreateANewWorkout() {
 		Workout workout = new Workout(null, "squats", 66, BodyPart.LEGS, 8, "sarah1");
 		ResponseEntity<Void> createResponse = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.postForEntity(API_WORKOUTS, workout, Void.class);
 
 		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		URI locationOfNewWorkout = createResponse.getHeaders().getLocation();
 		ResponseEntity<String> newWorkoutResponse = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.getForEntity(locationOfNewWorkout, String.class);
-		System.out.println(locationOfNewWorkout.toString());
 		assertThat(newWorkoutResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
 		makeAssertionsForWorkoutFields(workout, newWorkoutResponse);
@@ -68,8 +74,9 @@ class WorkoutTrackerApplicationTests {
 	public void shouldReturnAListOfWorkouts() {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-		ResponseEntity<Workout> workouts = testRestTemplate
-				.exchange(API_WORKOUTS, HttpMethod.GET, new HttpEntity<>(httpHeaders), Workout.class);
+		ResponseEntity<String> workouts = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
+				.exchange(API_WORKOUTS, HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class);
 
 		assertThat(workouts.getStatusCode()).isEqualTo(HttpStatus.OK);
 		DocumentContext documentContext = JsonPath.parse(workouts.getBody());
@@ -96,10 +103,12 @@ class WorkoutTrackerApplicationTests {
 		HttpEntity<Workout> request = new HttpEntity<>(workout);
 
 		ResponseEntity<Void> response = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.exchange(API_WORKOUTS + "/2", HttpMethod.PUT, request, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
 		ResponseEntity<String> getResponse = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.getForEntity(API_WORKOUTS + "/2", String.class);
 
 		makeAssertionsForWorkoutFields(workout, getResponse);
@@ -112,6 +121,7 @@ class WorkoutTrackerApplicationTests {
 		HttpEntity<Workout> request = new HttpEntity<>(workout);
 
 		ResponseEntity<Void> response = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.exchange(API_WORKOUTS + "/2444", HttpMethod.PUT, request, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
@@ -120,10 +130,12 @@ class WorkoutTrackerApplicationTests {
 	@DirtiesContext
 	public void shouldDeleteWorkoutWithGivenId() {
 		ResponseEntity<Void> response = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.exchange(API_WORKOUTS + "/2", HttpMethod.DELETE, null, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
 		ResponseEntity getResponse = testRestTemplate
+				.withBasicAuth(TEST_USER_NAME, TEST_PASSWORD)
 				.getForEntity(API_WORKOUTS + "/2", String.class);
 
 		assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
